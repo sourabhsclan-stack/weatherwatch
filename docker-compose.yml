@@ -1,0 +1,34 @@
+services:
+  app:
+    build: .
+    container_name: weatherwatch-app
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=development
+      - APP_NAME=WeatherWatch
+      - CACHE_TTL=600
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - weatherwatch-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: weatherwatch-redis
+    networks:
+      - weatherwatch-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  weatherwatch-network:
+    driver: bridge
